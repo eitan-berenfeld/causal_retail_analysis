@@ -1,9 +1,9 @@
 import pandas as pd
 
-file_path = "causal_retail_analysis/data/Store_Dataset.csv"
+file_path = "data/Store_Dataset.csv"
 store_df = pd.read_csv(file_path)
 
-file_path = "causal_retail_analysis/data/store_location_dataset.csv"
+file_path = "data/store_location_dataset.csv"
 store_loc_df = pd.read_csv(file_path)
 store_loc_df['store_id'] = store_loc_df['index']
 
@@ -48,10 +48,10 @@ agg_metrics.columns = ['store_id',
 
 merged_df = pd.merge(agg_metrics, store_df, left_on='store_id', right_index=True)
 # Merge lat/lon into merged_df using store_id
-merged_df = pd.merge(
+df = pd.merge(
     merged_df,
     store_loc_df[['store_id', 'latitude', 'longitude']],
     on='store_id',
     how='left'
 )
-print(merged_df.head(5))
+print(df.head(5))
