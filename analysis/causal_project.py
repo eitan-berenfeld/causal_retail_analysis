@@ -1,65 +1,56 @@
 import pandas as pd
-import os
 from pathlib import Path
-
-# Get the project root dynamically (assuming this script is in analysis/ subdirectory)
-script_dir = Path(__file__).parent
-project_root = script_dir.parent
-data_dir = project_root / "data"
-
-# Use Path objects for cross-platform file path handling
-file_path = data_dir / "Store_Dataset.csv"
-store_df = pd.read_csv(file_path)
-
-file_path = data_dir / "store_location_dataset.csv"
-store_loc_df = pd.read_csv(file_path)
-store_loc_df['store_id'] = store_loc_df['index']
-
 from datasets import load_dataset
 
-fresh_ds = load_dataset("Dingdong-Inc/FreshRetailNet-50K")
-df = fresh_ds['train'].to_pandas()
+def load_and_prepare_data():
+    script_dir = Path(__file__).parent
+    project_root = script_dir.parent
+    data_dir = project_root / "data"
 
-df['dt'] = pd.to_datetime(df['dt'])
+    file_path = data_dir / "Store_Dataset.csv"
+    store_df = pd.read_csv(file_path)
 
-# Aggregate to daily store-level metrics
-daily_metrics = df.groupby(['store_id', 'dt']).agg(
-    avg_daily_sales=('sale_amount', 'sum'),
-    avg_orders_per_day=('hours_sale', 'sum'),
-    avg_inventory_level=('stock_hour6_22_cnt', 'mean')
-).reset_index()
+    file_path = data_dir / "store_location_dataset.csv"
+    store_loc_df = pd.read_csv(file_path)
+    store_loc_df['store_id'] = store_loc_df['index']
 
-# Choose a treatment date (e.g., middle of dataset)
-treatment_date = pd.Timestamp("2024-05-10")
+    fresh_ds = load_dataset("Dingdong-Inc/FreshRetailNet-50K")
+    df = fresh_ds['train'].to_pandas()
+    df['dt'] = pd.to_datetime(df['dt'])
 
-# Label pre/post period
-daily_metrics['period'] = daily_metrics['dt'].apply(
-    lambda d: 'pre' if d < treatment_date else 'post'
-)
+    daily_metrics = df.groupby(['store_id', 'dt']).agg(
+        avg_daily_sales=('sale_amount', 'sum'),
+        avg_orders_per_day=('hours_sale', 'sum'),
+        avg_inventory_level=('stock_hour6_22_cnt', 'mean')
+    ).reset_index()
 
-# Compute pre/post average metrics per store
-agg_metrics = daily_metrics.groupby(['store_id', 'period']).agg({
-    'avg_daily_sales': 'mean',
-    'avg_orders_per_day': 'mean',
-    'avg_inventory_level': 'mean'
-}).unstack().reset_index()
+    treatment_date = pd.Timestamp("2024-05-10")
+    daily_metrics['period'] = daily_metrics['dt'].apply(
+        lambda d: 'pre' if d < treatment_date else 'post'
+    )
 
-# Flatten multi-index columns
-agg_metrics.columns = ['store_id',
-    'sales_post', 'sales_pre',
-    'orders_post', 'orders_pre',
-    'inventory_post', 'inventory_pre'
-]
+    agg_metrics = daily_metrics.groupby(['store_id', 'period']).agg({
+        'avg_daily_sales': 'mean',
+        'avg_orders_per_day': 'mean',
+        'avg_inventory_level': 'mean'
+    }).unstack().reset_index()
 
-# np.random.seed(42)
-# agg_metrics['treated'] = np.random.choice([0, 1], size=len(agg_metrics))
+    agg_metrics.columns = ['store_id',
+        'sales_post', 'sales_pre',
+        'orders_post', 'orders_pre',
+        'inventory_post', 'inventory_pre'
+    ]
 
-merged_df = pd.merge(agg_metrics, store_df, left_on='store_id', right_index=True)
-# Merge lat/lon into merged_df using store_id
-df = pd.merge(
-    merged_df,
-    store_loc_df[['store_id', 'latitude', 'longitude']],
-    on='store_id',
-    how='left'
-)
-print(df.head(5))
+    merged_df = pd.merge(agg_metrics, store_df, left_on='store_id', right_index=True)
+    merged_df = pd.merge(
+        merged_df,
+        store_loc_df[['store_id', 'latitude', 'longitude']],
+        on='store_id',
+        how='left'
+    )
+    
+    return merged_df
+
+if __name__ == "__main__":
+    merged_df = load_and_prepare_data()
+    print(merged_df.head(5))
