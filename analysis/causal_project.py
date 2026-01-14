@@ -1,9 +1,17 @@
 import pandas as pd
+import os
+from pathlib import Path
 
-file_path = "data/Store_Dataset.csv"
+# Get the project root dynamically (assuming this script is in analysis/ subdirectory)
+script_dir = Path(__file__).parent
+project_root = script_dir.parent
+data_dir = project_root / "data"
+
+# Use Path objects for cross-platform file path handling
+file_path = data_dir / "Store_Dataset.csv"
 store_df = pd.read_csv(file_path)
 
-file_path = "data/store_location_dataset.csv"
+file_path = data_dir / "store_location_dataset.csv"
 store_loc_df = pd.read_csv(file_path)
 store_loc_df['store_id'] = store_loc_df['index']
 
