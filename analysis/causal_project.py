@@ -3,6 +3,7 @@ from pathlib import Path
 from datasets import load_dataset
 
 def load_and_prepare_data():
+    """Load source datasets and return a store-level pre/post outcome table with covariates and lat/lon."""
     script_dir = Path(__file__).parent
     project_root = script_dir.parent
     data_dir = project_root / "data"
