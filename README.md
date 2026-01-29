@@ -1,6 +1,6 @@
-# causal_retail_analysis
+# Causal Retail Analysis 
 
-A **simplified but econometrically rigorous** pipeline for evaluating localized retail interventions where **geography and spillovers matter**.
+A pipeline for evaluating localized retail interventions where geography and spillovers matter.
 
 ## What this project does
 
@@ -36,3 +36,6 @@ python -m causal_retail_analysis.analysis.pipeline --geo-eps-miles 37 --geo-min-
 - A matched treated/control sample and **SMD balance diagnostics**
 - An **ATE estimate** from IPW-weighted DiD with clustered SEs and a 95% CI
 - Robustness summaries (sensitivity to weight trimming + placebo DiD)
+
+
+ next I will replace the demo treatment assignment with a real treatment definition (e.g., treated store list + a treatment date) and make the DiD panel more realistic (multiple pre/post periods), which will unlock stronger robustness checks (parallel trends + event study).
