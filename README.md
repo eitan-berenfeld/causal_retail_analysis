@@ -46,11 +46,11 @@ The sales outcome is pulled from the HuggingFace dataset `Dingdong-Inc/FreshReta
 
 Stated plainly, because they bound what this repo currently demonstrates:
 
-- **The three source datasets are joined by row position, not by a shared key.** Sales come from `Dingdong-Inc/FreshRetailNet-50K`, store covariates from `data/Store_Dataset.csv` (499 rows), and coordinates from `data/store_location_dataset.csv` (4,654 rows). The merge is `pd.merge(agg_metrics, store_df, left_on='store_id', right_index=True)`, so a store's covariates are whatever row happened to sit at that index in an unrelated file, and any `store_id` at or above 499 is silently dropped. The matching and propensity steps are therefore running on covariates that do not belong to the outcome units. This is the first thing to fix.
+- **The three source datasets are joined by row position, not by a shared key.** Sales come from `Dingdong-Inc/FreshRetailNet-50K`, store covariates from `data/Store_Dataset.csv` (499 rows), and coordinates from `data/store_location_dataset.csv` (4,654 rows). The merge is `pd.merge(agg_metrics, store_df, left_on='store_id', right_index=True)`, so a store's covariates are whatever row happened to sit at that index in an unrelated file, and any `store_id` at or above 499 is silently dropped. The matching and propensity steps are therefore running on covariates that do not belong to the outcome units, and everything downstream of the merge inherits that.
 - **The pre/post split is arbitrary.** `treatment_date = 2024-05-10` is hardcoded with no event behind it.
 - **No tests.** CI runs pylint only.
 - **Requirements are unpinned**, so a clean install is not reproducible across time.
 
-## Where this goes next
+## Scope
 
-Replace the demo assignment with a real treatment definition (a treated-store list plus a treatment date), join the sources on a genuine key, and extend the DiD panel to multiple pre/post periods — which is what unlocks the robustness checks that matter here, parallel-trends and an event study.
+This was written to work through the mechanics of a geo-aware causal design — clustering, buffer selection, matching, weighting, and a DiD estimator with clustered errors — rather than to produce a defensible effect estimate. It is not under active development. Getting a real number out of it would mean supplying a genuine treatment definition and joining the sources on a shared key; the defects above say where that starts.
