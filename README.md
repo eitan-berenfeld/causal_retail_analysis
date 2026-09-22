@@ -2,6 +2,8 @@
 
 A pipeline for evaluating localized retail interventions where geography and spillovers matter.
 
+The problem this is built for: most naive before/after retail analyses ignore geography entirely, which breaks down the moment stores are close enough to affect each other. A promotion at one location can pull customers away from a "control" store two miles away, contaminating the comparison. The pipeline below treats that as a first-class problem instead of an edge case: it clusters stores geographically, picks a spillover buffer before matching anything, and only then estimates the effect.
+
 ## What this project does
 
 Given store-level covariates, store locations (lat/lon), and outcomes measured **pre vs post** intervention, the pipeline:
