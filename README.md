@@ -18,19 +18,21 @@ Given store-level covariates, store locations (lat/lon), and outcomes measured *
 
 ## How to run (current demo mode)
 
-Right now, the pipeline assigns a **synthetic** treatment label (random \(50\%\)) so you can run end-to-end without intervention data; replace `treated` with your real assignment when available.
+**There is no real intervention in this repo.** `assign_treatment_demo()` in `analysis/pipeline.py` assigns the `treated` flag at random to 50% of stores, so what runs end to end is the *machinery* — clustering, buffer selection, matching, IPW-weighted DiD — exercised against a known-null assignment. Any ATE it reports should be indistinguishable from zero; that is the point of running it this way, not a finding. Swap `assign_treatment_demo` for a real treated-store list and treatment date to get an estimate that means anything.
 
 From the project root:
 
 ```bash
-python -m causal_retail_analysis.analysis.pipeline
+python -m analysis.pipeline
 ```
 
 Optional parameters:
 
 ```bash
-python -m causal_retail_analysis.analysis.pipeline --geo-eps-miles 37 --geo-min-samples 8 --treated-frac 0.5 --seed 42 --smd-threshold 0.2 --min-pairs 50
+python -m analysis.pipeline --geo-eps-miles 37 --geo-min-samples 8 --treated-frac 0.5 --seed 42 --smd-threshold 0.2 --min-pairs 50
 ```
+
+The sales outcome is pulled from the HuggingFace dataset `Dingdong-Inc/FreshRetailNet-50K` at runtime, so the first run needs network access.
 
 ## Outputs to expect
 
@@ -40,4 +42,15 @@ python -m causal_retail_analysis.analysis.pipeline --geo-eps-miles 37 --geo-min-
 - Robustness summaries (sensitivity to weight trimming + placebo DiD)
 
 
- next I will replace the demo treatment assignment with a real treatment definition (e.g., treated store list + a treatment date) and make the DiD panel more realistic (multiple pre/post periods), which will unlock stronger robustness checks (parallel trends + event study).
+## Known defects
+
+Stated plainly, because they bound what this repo currently demonstrates:
+
+- **The three source datasets are joined by row position, not by a shared key.** Sales come from `Dingdong-Inc/FreshRetailNet-50K`, store covariates from `data/Store_Dataset.csv` (499 rows), and coordinates from `data/store_location_dataset.csv` (4,654 rows). The merge is `pd.merge(agg_metrics, store_df, left_on='store_id', right_index=True)`, so a store's covariates are whatever row happened to sit at that index in an unrelated file, and any `store_id` at or above 499 is silently dropped. The matching and propensity steps are therefore running on covariates that do not belong to the outcome units. This is the first thing to fix.
+- **The pre/post split is arbitrary.** `treatment_date = 2024-05-10` is hardcoded with no event behind it.
+- **No tests.** CI runs pylint only.
+- **Requirements are unpinned**, so a clean install is not reproducible across time.
+
+## Where this goes next
+
+Replace the demo assignment with a real treatment definition (a treated-store list plus a treatment date), join the sources on a genuine key, and extend the DiD panel to multiple pre/post periods — which is what unlocks the robustness checks that matter here, parallel-trends and an event study.
